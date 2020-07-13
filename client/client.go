@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
-	"../chat"
+	"../db"
 	"google.golang.org/grpc"
 )
 
@@ -17,13 +18,16 @@ func main() {
 
 	defer conn.Close()
 
-	c := chat.NewChatServiceClient(conn)
+	c := db.NewDatabaseServiceClient(conn)
 
-	message := chat.Message{
-		Body: "Hello from the client!",
+	message := db.LimitOffset{
+		Limit:  10,
+		Offset: 0,
 	}
 
-	response, err := c.SayHello(context.Background(), &message)
+	response, err := c.GetDB(context.Background(), &message)
 
-	log.Printf("Response from the Server: %s", response.Messages)
+	for i, s := range response.Rows {
+		fmt.Println(i, s)
+	}
 }

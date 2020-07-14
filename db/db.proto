@@ -28,7 +28,4 @@ message Empty {}
 service DatabaseService {
     rpc GetDB(LimitOffset) returns (Rows) {}
     rpc Insert(SingleRow) returns (SingleRow) {}
-    // rpc FindById(Id) returns (SingleRow) {}
-    // rpc DeleteById(Id) returns (Empty) {}
-    // rpc UpdateById(Id) returns (SingleRow) {}
 }

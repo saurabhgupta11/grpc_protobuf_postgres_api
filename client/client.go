@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,12 +11,39 @@ import (
 
 	"../db"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/protobuf/proto"
 )
 
+func loadTLSCredentials() (credentials.TransportCredentials, error) {
+	// load certificate of CA who signed web server's certificate
+	pemServerCA, err := ioutil.ReadFile("../cert/ca-cert.pem")
+	if err != nil {
+		return nil, err
+	}
+
+	// create the credentials
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(pemServerCA) {
+		return nil, fmt.Errorf("failed to add server's ca certificate")
+	}
+
+	config := &tls.Config{
+		RootCAs: certPool,
+	}
+
+	return credentials.NewTLS(config), nil
+}
+
 func main() {
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(":9000", grpc.WithInsecure())
+
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatal("FAiled to load TLS credentials", err)
+	}
+
+	conn, err = grpc.Dial(":9000", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatal("Error")
 	}
